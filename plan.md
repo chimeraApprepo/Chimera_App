@@ -14,8 +14,8 @@ This document outlines the execution strategy for building **"The Sovereign Arch
 ### P1: The Brain (Backend & AI Lead)
 
 - **Focus**: Intelligence, Context, & API Handling
-- **Primary Tools**: ChainGPT AgenticOS, Bun, Hono, TypeScript
-- **Responsibility**: You are building the nervous system. You need to fork the AgenticOS framework and strip out the social media bots to replace them with DeFi logic. Your agent needs to "know" the state of the blockchain (gas prices, block numbers) before it answers.
+- **Primary Tools**: ChainGPT SDKs (@chaingpt/generalchat, @chaingpt/smartcontractgenerator, @chaingpt/smartcontractauditor), Node.js/Bun, Hono, TypeScript
+- **Responsibility**: You are building the nervous system from scratch using ChainGPT SDKs. You will create a reactive web chat backend that responds to user requests (not a proactive social agent). Your agent needs to "know" the state of the blockchain (gas prices, block numbers) before it answers. You will implement streaming responses for real-time user feedback.
 
 ### P2: The Hands (DeFi & Contracts Lead)
 
@@ -37,7 +37,48 @@ This document outlines the execution strategy for building **"The Sovereign Arch
 
 ---
 
-## 2. Web3 Crash Course (Read This First)
+## 2. Architecture Decision: Build from Scratch vs. Fork AgenticOS
+
+### Why Build from Scratch?
+
+**ChainGPT's AgenticOS** is designed for **autonomous social media agents** (Twitter bots) that operate on a proactive, cron-based schedule. It uses a **push-based** model where the agent initiates actions on its own schedule.
+
+**Our project** requires an **interactive web chat agent** that operates on a reactive, user-initiated model. It uses a **pull-based** model where users send requests and the agent responds.
+
+### Key Architectural Differences
+
+| Feature | AgenticOS (Social Agent) | Our Approach (Web Chat Agent) |
+|---------|--------------------------|-------------------------------|
+| **Control Flow** | Proactive: Cron-triggered | Reactive: User HTTP requests |
+| **State Management** | Stateless: Single timeline | Session-based: Per-user history |
+| **Primary Dependency** | Twitter OAuth + API v2 | ChainGPT SDKs + Web3 |
+| **Response Model** | Static: Full tweet generation | Streaming: Real-time token flow |
+| **Concurrency** | Single agent identity | Multi-user concurrent sessions |
+| **Deployment** | Long-running VPS/container | Serverless/edge-compatible |
+
+### Our Technical Stack
+
+We will build using **ChainGPT SDKs** directly:
+
+- **@chaingpt/generalchat**: Web3 LLM with streaming support for chat responses
+- **@chaingpt/smartcontractgenerator**: Natural language to Solidity code
+- **@chaingpt/smartcontractauditor**: Security analysis and vulnerability detection
+- **Node.js/Bun**: Runtime (Bun for performance, but Node.js compatible)
+- **Hono**: Lightweight web framework for API routes
+- **Next.js (optional)**: Full-stack React framework with API routes as secure proxy
+
+### Benefits of This Approach
+
+1. **Clean Architecture**: Purpose-built for web chat, not retrofitted from social media
+2. **Streaming Support**: Token-by-token response streaming for better UX
+3. **Secure API Key Management**: Backend proxy prevents client-side key exposure
+4. **Standard Patterns**: Uses familiar web development patterns (Express/Next.js style)
+5. **Lower Maintenance**: Direct SDK updates via npm/bun, no fork merge conflicts
+6. **Multi-user Support**: Native session management for concurrent users
+
+---
+
+## 3. Web3 Crash Course (Read This First)
 
 Since the team is new to Web3, strictly adhere to these definitions.
 
@@ -66,8 +107,9 @@ Since the team is new to Web3, strictly adhere to these definitions.
 
 ### 5. Bun vs. Node.js
 
-- **Concept**: Bun is a modern JavaScript runtime that is significantly faster than Node.js. ChainGPT's AgenticOS is built on Bun.
-- **Constraint**: You cannot use `npm install`. You must use `bun install`.
+- **Concept**: Bun is a modern JavaScript runtime that is significantly faster than Node.js, with faster startup times and lower memory footprint.
+- **Our Choice**: We use Bun as our package manager and runtime for performance benefits, especially for streaming responses. However, our code remains Node.js compatible.
+- **Usage**: Use `bun install` for dependencies and `bun run` for scripts.
 - **Link**: [Bun Documentation](https://bun.sh/docs)
 
 ### 6. Viem vs. Ethers.js
@@ -76,9 +118,41 @@ Since the team is new to Web3, strictly adhere to these definitions.
 - **Constraint**: Do not use Ethers.js unless a specific SDK forces you to.
 - **Link**: [Viem Documentation](https://viem.sh)
 
+### 7. ERC-8004 (Trustless Agent Standard)
+
+- **Concept**: An Ethereum standard for creating verifiable on-chain agent identities. It establishes three registries: Identity (NFT passport), Reputation (feedback ledger), and Validation (proof of autonomy).
+- **Our Use**: We mint an ERC-8004 NFT for our agent to prove its legitimacy and enable trust scoring.
+- **Link**: [ERC-8004 Explained](https://learn.backpack.exchange/article/erc-8004-explained-ethereum-ai-agent-standard-guide-2025)
+
+### 8. x402 Payment Protocol
+
+- **Concept**: A "sign-to-pay" protocol that revives HTTP 402 (Payment Required) for crypto. Agents can programmatically pay for API resources by signing transactions in response to 402 challenges.
+- **Our Use**: Our agent accepts x402 micropayments for its services and can also pay for premium data sources.
+- **Link**: [x402 Protocol Guide](https://docs.cdp.coinbase.com/x402/docs/how-x402-works)
+
 ---
 
-## 3. The 5-Day Execution Schedule
+## 4. Essential Resources
+
+### ChainGPT Documentation
+- **Main Docs**: https://docs.chaingpt.org
+- **SDK Reference**: https://docs.chaingpt.org/chaingpt-ai/sdk-reference
+- **Web3 LLM API**: https://docs.chaingpt.org/chaingpt-ai/web3-ai-chatbot-llm-api-sdk
+- **Smart Contract Generator**: https://docs.chaingpt.org/chaingpt-ai/smart-contracts-generator-api-sdk
+- **Smart Contract Auditor**: https://docs.chaingpt.org/chaingpt-ai/smart-contracts-auditor-api-sdk
+
+### Quack Q402 (Sign-to-Pay on BNB)
+- **GitHub Repository**: https://github.com/quackai-labs/Q402
+- **Focus**: EIP-712 signatures, policy schemas, facilitator service patterns
+
+### AWE Network (Agent Identity & Economy)
+- **Documentation**: https://docs.awenetwork.ai
+- **AWEtoAgent Kit**: https://github.com/STPDevteam/AWEtoAgent-Kit
+- **Focus**: ERC-8004 deployment, x402 implementation
+
+---
+
+## 5. The 5-Day Execution Schedule
 
 ### Day 1: Orientation & Environment Setup
 
@@ -86,11 +160,17 @@ Since the team is new to Web3, strictly adhere to these definitions.
 
 #### P1 (Brain):
 
-1. Install Bun
-2. Fork the `ChainGPT-org/AgenticOS` repository
-3. Run the "Hello World" example to ensure the local server starts
+1. Install Bun: `curl -fsSL https://bun.sh/install | bash`
+2. Initialize a new project: `bun init` or set up a Node.js/Express backend
+3. Install ChainGPT SDKs:
+   ```bash
+   bun add @chaingpt/generalchat @chaingpt/smartcontractgenerator @chaingpt/smartcontractauditor
+   ```
+4. Set up Hono framework: `bun add hono`
+5. Create a basic API route that returns "Hello World"
+6. Obtain ChainGPT API key from https://app.chaingpt.org and store in `.env`
 
-**Deliverable**: A running Hono server on `localhost:3000`
+**Deliverable**: A running API server on `localhost:3000` with ChainGPT SDK successfully imported
 
 #### P2 (Hands):
 
@@ -122,11 +202,19 @@ Since the team is new to Web3, strictly adhere to these definitions.
 
 #### P1 (Brain):
 
-1. Create `src/modules/chainGPT.ts`
-2. Implement the API wrapper for ChainGPT's "Web3 LLM"
-3. Create a "Context Injection" function that adds the current date and block number to every prompt
+1. Create `src/services/chainGPT.ts` that wraps the ChainGPT SDKs
+2. Implement the `createChatStream` function using `@chaingpt/generalchat` for streaming responses
+3. Create a "Context Injection" function that:
+   - Fetches current BNB gas price
+   - Gets latest block number
+   - Adds current timestamp
+   - Prepends this context to every user prompt
+4. Build `/api/chat` endpoint that:
+   - Accepts `{ message: string, history?: Message[] }`
+   - Returns a streaming response (Server-Sent Events)
+   - Manages conversation context per session
 
-**Deliverable**: An API endpoint `/api/chat` that accepts a prompt and returns an AI response
+**Deliverable**: A streaming API endpoint `/api/chat` that responds in real-time with Web3-aware answers
 
 #### P2 (Hands):
 
@@ -227,7 +315,80 @@ Since the team is new to Web3, strictly adhere to these definitions.
 
 ---
 
-## 4. Risk Management (Plan B)
+## 6. Key Implementation Details
+
+### Streaming Response Pattern
+
+The ChainGPT General Chat SDK supports streaming, which is critical for good UX:
+
+```typescript
+import { createChatStream } from '@chaingpt/generalchat';
+
+// Server-side API route
+async function handleChat(req, res) {
+  const stream = await createChatStream({
+    apiKey: process.env.CHAINGPT_API_KEY,
+    messages: req.body.messages,
+  });
+  
+  res.setHeader('Content-Type', 'text/event-stream');
+  
+  for await (const chunk of stream) {
+    res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+  }
+  
+  res.end();
+}
+```
+
+### Context Injection Pattern
+
+Before sending prompts to ChainGPT, inject blockchain state:
+
+```typescript
+async function injectContext(userPrompt: string) {
+  const gasPrice = await getGasPrice(); // via viem
+  const blockNumber = await getBlockNumber();
+  
+  const context = `[System Context - Current Time: ${new Date().toISOString()}, BNB Chain Block: ${blockNumber}, Gas Price: ${gasPrice} Gwei]`;
+  
+  return `${context}\n\nUser: ${userPrompt}`;
+}
+```
+
+### x402 Middleware Pattern
+
+Protect premium endpoints with payment requirements:
+
+```typescript
+function x402Middleware(cost: number) {
+  return (req, res, next) => {
+    const paymentProof = req.headers['x-payment-proof'];
+    
+    if (!paymentProof) {
+      res.status(402).json({
+        error: 'Payment Required',
+        amount: cost,
+        token: 'USDC',
+        chain: 'bnb',
+        recipient: process.env.AGENT_WALLET_ADDRESS
+      });
+      return;
+    }
+    
+    // Verify signature (using AWEtoAgent Kit)
+    if (verifyX402Payment(paymentProof)) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Invalid payment' });
+    }
+  };
+}
+```
+
+---
+
+## 7. Risk Management (Plan B)
 
 ### Risk: The AWE or Quack SDKs are broken or undocumented
 
@@ -245,9 +406,17 @@ Since the team is new to Web3, strictly adhere to these definitions.
 **Mitigation**:
 - Set up a "Low Balance Alert" on Discord that pings the team if the Facilitator wallet drops below 0.05 BNB.
 
+### Risk: ChainGPT SDK issues or API rate limits
+
+**Mitigation**:
+- Implement caching for repeated queries (use Redis or in-memory cache)
+- Set up fallback responses for common questions
+- Monitor API usage and implement client-side rate limiting
+- Have backup API keys ready
+
 ---
 
-## 5. Coding Standards for the Team
+## 8. Coding Standards for the Team
 
 - **Strict Types**: No `any` in TypeScript. Define interfaces for everything.
 - **Environment Variables**: Never commit private keys. Use `.env` files.
