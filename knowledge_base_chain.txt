@@ -1,0 +1,187 @@
+# The Sovereign Architect - Project Knowledge Base
+
+## Project Overview
+The Sovereign Architect (codename: Chimera) is an AI Agent built for the BNB Chain Hackathon that researches, architects, audits, and deploys DeFi strategies autonomously. It combines ChainGPT (Intelligence), Quack Q402 (Execution), and AWE Network (Identity) into a unified system.
+
+## Core Mission
+Enable users to interact with blockchain technology through natural language, where the AI agent generates smart contracts, audits them for security vulnerabilities, and executes gasless transactions on behalf of users.
+
+## Technical Stack
+
+### Intelligence Layer - ChainGPT
+- Web3 AI Chatbot (@chaingpt/generalchat): Domain-specific LLM for crypto/blockchain conversations
+- Smart Contract Generator (@chaingpt/smartcontractgenerator): Natural language to Solidity code generation
+- Smart Contract Auditor (@chaingpt/smartcontractauditor): Automated vulnerability detection and security analysis
+- Streaming Support: Real-time token-by-token responses using Server-Sent Events (SSE)
+
+### Execution Layer - Quack Q402
+- EIP-7702 Delegated Execution: Gasless transaction protocol
+- Sign-to-Pay Mechanics: Users sign a policy/intent, agent pays the gas
+- Policy Enforcement: Cryptographic boundaries (spend caps, allow/deny lists, time restrictions)
+- Facilitator Service: Stateless verification and settlement on BNB Smart Chain
+
+### Identity Layer - AWE Network
+- ERC-8004 Standard: On-chain agent identity with verifiable reputation
+- x402 Protocol: HTTP 402 Payment Required for micropayment acceptance
+- Service Token Economics: Agents can monetize their services through blockchain-native payments
+- BNB Attestation Service (BAS): Identity registry on BSC at 0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD
+
+## Key Web3 Concepts
+
+### Gas Sponsorship
+Every blockchain operation costs "gas" (computing power) paid in BNB. Our agent uses gas sponsorship where users sign a permission slip (intent), and the agent pays the transaction fee on their behalf.
+
+### EIP-712 (Typed Structured Data)
+A standard for hashing and signing data so it's human-readable. Instead of signing random hex strings, users see JSON objects like {"To": "Agent", "Amount": "5 USDC"} preventing phishing attacks.
+
+### EIP-7702 (Delegated Execution)
+Allows smart contracts to temporarily execute code in the context of a user's wallet without requiring pre-approval transactions. This enables true gasless payments with any ERC-20 token.
+
+### x402 (Payment Required Protocol)
+Revival of HTTP 402 status code for crypto payments. When requesting premium resources, servers return 402, browsers prompt for crypto payment, and resources unlock after confirmation.
+
+### ERC-8004 (Trustless Agent Standard)
+Ethereum standard for verifiable on-chain agent identities with three registries: Identity (NFT passport), Reputation (feedback ledger), and Validation (proof of autonomy).
+
+## Architecture Components
+
+### Backend (Hono Framework)
+- Runtime: Bun for performance with Node.js compatibility
+- API Routes: /api/chat (streaming), /api/generate (contracts), /api/audit (security), /api/execute (transactions)
+- Context Injection: Real-time blockchain state (gas prices, block numbers, timestamps)
+- Security: API keys in environment variables, backend acts as secure proxy
+
+### Frontend (React + Vite)
+- Chat interface with markdown rendering for code blocks
+- Wallet connection via Wagmi (BNB Smart Chain Testnet/Mainnet)
+- Transaction Preview Cards showing safety scores, gas costs, policy limits
+- x402 Payment modals with clear cost explanations
+- Real-time streaming responses using Server-Sent Events
+
+### Blockchain Integration (Viem)
+- Type-safe blockchain interactions
+- Smart contract deployment and verification
+- Transaction broadcasting and monitoring
+- Gas price estimation and optimization
+
+## User Flow Example
+
+1. User Request: "Create a token called 'PizzaCoin' with 1 million supply"
+2. Payment Challenge: Agent responds with x402 (Payment Required: $5 USDC)
+3. User Payment: Signs payment authorization (gasless for user)
+4. Code Generation: ChainGPT generates Solidity contract code
+5. Security Audit: ChainGPT auditor analyzes for vulnerabilities (score must be >80%)
+6. Self-Correction Loop: If audit fails, regenerate with fixes until passing
+7. Transaction Preview: Display safety score, gas cost (sponsored), policy limits
+8. User Authorization: User signs EIP-712 structured data (no gas paid)
+9. Facilitator Execution: Agent's wallet submits transaction to BSC
+10. Confirmation: User receives contract address and transaction hash
+
+## Security Features
+
+### Policy-Based Execution
+- Maximum spend limits per transaction
+- Token whitelist/blacklist for allowed interactions
+- Time-based restrictions (expiration deadlines)
+- Recipient address validation
+
+### Audit Loop
+- Automated security scanning of all generated code
+- Minimum safety threshold of 80% score
+- Iterative regeneration with vulnerability feedback
+- Pre-verified "Golden Paths" for common contracts
+
+### Transaction Transparency
+- Full preview before any signature
+- Clear explanation of what will execute on-chain
+- Risk warnings for potentially dangerous operations
+- Immutable transaction logs for accountability
+
+## Supported Networks
+
+### BNB Smart Chain Testnet (Chain ID: 97)
+- RPC: https://data-seed-prebsc-1-s1.binance.org:8545
+- Explorer: https://testnet.bscscan.com
+- Faucet: https://www.bnbchain.org/en/testnet-faucet
+- Test USDT: 0x337610d27c682E347C9cD60BD4b3b107C9d34dDd
+
+### BNB Smart Chain Mainnet (Chain ID: 56)
+- RPC: https://bsc-dataseed1.binance.org
+- Explorer: https://bscscan.com
+- Production deployment target
+
+## Smart Contract Templates
+
+The agent can generate and deploy:
+- ERC-20 Tokens (fungible tokens with custom economics)
+- ERC-721 NFTs (unique digital assets)
+- ERC-1155 Multi-tokens (hybrid fungible/non-fungible)
+- Staking Contracts (lock tokens, earn rewards)
+- Vesting Contracts (time-locked token distribution)
+- Voting/Governance (DAO proposal systems)
+- DEX Pools (automated market makers)
+- Lending Protocols (collateralized borrowing)
+
+## Error Handling Strategies
+
+### ChainGPT API Issues
+- Implement caching for repeated queries
+- Set up fallback responses for common questions
+- Monitor API usage with client-side rate limiting
+- Maintain backup API keys
+
+### Q402 Transaction Failures
+- Retry logic with exponential backoff
+- Clear error messages for signature rejections
+- Fallback to manual approval flow if needed
+- Transaction status monitoring and notifications
+
+### AWE Network Fallbacks
+- If ERC-8004 SDK fails, deploy standard ERC-721
+- Use viem for manual contract interactions
+- Demonstrate understanding of underlying protocol
+
+## Target Bounties
+
+### Quack × ChainGPT Super Web3 Agent ($20,000)
+Requirements:
+- Minimum 2 ChainGPT APIs (using all 3: Chat, Generator, Auditor)
+- Real Q402 sign-to-pay implementation
+- Security features (spend caps, allow/deny lists, previews, warnings)
+- Testnet/Mainnet toggle
+- Professional demo video
+
+### AWE Network 800402 Initiative ($10,000)
+Requirements:
+- ERC-8004 agent identity deployment
+- x402 micropayment acceptance
+- Service token issuance on x402 Market
+- Complete payment flow demonstration
+- GitHub repository with documentation
+
+## Competitive Advantages
+1. Full-stack integration of three major protocols
+2. Security-first approach with automated auditing
+3. Real utility beyond chatbot (actual contract deployment)
+4. Gasless UX removing friction for mainstream users
+5. Monetization model enabling sustainable agent economy
+6. Modern fintech-style interface demystifying Web3 complexity
+
+## Development Constraints
+- Strict TypeScript with no 'any' types
+- Environment variables for all secrets
+- ESM modules only (no CommonJS)
+- Bun as primary runtime and package manager
+- Viem for blockchain interactions (not ethers.js)
+- Comment the "why" not the "how" in code
+- All responses must stream for better UX
+
+## Testing Strategy
+- Unit tests for all core functions
+- Integration tests for Q402 payment flow
+- End-to-end tests for contract generation → audit → deployment
+- Testnet validation before mainnet deployment
+- Low balance alerts for facilitator wallet (<0.05 BNB)
+
+## Project Status
+In active development for BNB Chain Hackathon. Target completion: 5-7 days for MVP with polish. Focus on demonstrable value over theoretical capabilities.

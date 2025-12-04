@@ -1,0 +1,30 @@
+{
+  "name": "sovereign-architect",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "AI Agent for autonomous DeFi strategy deployment using ChainGPT, Q402, and AWE Network",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node scripts/test-backend.js",
+    "test:e2e": "node scripts/test-e2e.js",
+    "check-balance": "node check-balance.js",
+    "validate": "node scripts/validate-setup.js",
+    "metadata": "node scripts/upload-metadata.js",
+    "deploy-identity": "node scripts/deploy-identity.js"
+  },
+  "dependencies": {
+    "@chaingpt/generalchat": "^0.0.17",
+    "@hono/node-server": "^1.19.6",
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.16.0",
+    "hono": "^4.10.1",
+    "solc": "^0.8.31",
+    "viem": "^2.41.2"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

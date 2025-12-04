@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wallet Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-family: monospace;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>🔌 Wallet Connection Diagnostic</h1>
+  
+  <div>
+    <h2>Step 1: Check if MetaMask is Installed</h2>
+    <button onclick="checkMetaMask()">Check MetaMask</button>
+    <div id="metamask-result" class="result"></div>
+  </div>
+
+  <div>
+    <h2>Step 2: Request Connection</h2>
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <div id="connect-result" class="result"></div>
+  </div>
+
+  <div>
+    <h2>Step 3: Get Account Info</h2>
+    <button onclick="getAccountInfo()">Get Account Info</button>
+    <div id="account-result" class="result"></div>
+  </div>
+
+  <script>
+    function checkMetaMask() {
+      const result = document.getElementById('metamask-result');
+      
+      if (typeof window.ethereum !== 'undefined') {
+        result.className = 'result success';
+        result.innerHTML = `
+          ✅ MetaMask is installed!<br>
+          Provider: ${window.ethereum.isMetaMask ? 'MetaMask' : 'Other wallet'}<br>
+          Chain ID: ${window.ethereum.chainId || 'Not connected'}<br>
+          Selected Address: ${window.ethereum.selectedAddress || 'None'}
+        `;
+      } else {
+        result.className = 'result error';
+        result.innerHTML = `
+          ❌ MetaMask is NOT installed!<br>
+          Please install MetaMask from https://metamask.io
+        `;
+      }
+    }
+
+    async function connectWallet() {
+      const result = document.getElementById('connect-result');
+      
+      if (typeof window.ethereum === 'undefined') {
+        result.className = 'result error';
+        result.innerHTML = '❌ MetaMask not found!';
+        return;
+      }
+
+      try {
+        result.innerHTML = '⏳ Requesting connection...';
+        
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        
+        result.className = 'result success';
+        result.innerHTML = `
+          ✅ Connected successfully!<br>
+          Account: ${accounts[0]}<br>
+          <br>
+          This means your MetaMask is working correctly!
+        `;
+      } catch (error) {
+        result.className = 'result error';
+        result.innerHTML = `
+          ❌ Connection failed!<br>
+          Error: ${error.message}<br>
+          <br>
+          Common causes:<br>
+          - You clicked "Cancel" in MetaMask<br>
+          - MetaMask is locked<br>
+          - MetaMask is on wrong network
+        `;
+      }
+    }
+
+    async function getAccountInfo() {
+      const result = document.getElementById('account-result');
+      
+      if (typeof window.ethereum === 'undefined') {
+        result.className = 'result error';
+        result.innerHTML = '❌ MetaMask not found!';
+        return;
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_accounts' 
+        });
+        
+        if (accounts.length === 0) {
+          result.className = 'result error';
+          result.innerHTML = '❌ No accounts connected. Click "Connect Wallet" first!';
+          return;
+        }
+
+        const chainId = await window.ethereum.request({ 
+          method: 'eth_chainId' 
+        });
+
+        const balance = await window.ethereum.request({
+          method: 'eth_getBalance',
+          params: [accounts[0], 'latest']
+        });
+
+        const balanceInEth = parseInt(balance, 16) / 1e18;
+
+        result.className = 'result success';
+        result.innerHTML = `
+          ✅ Account Information:<br>
+          <br>
+          Address: ${accounts[0]}<br>
+          Chain ID: ${parseInt(chainId, 16)} ${parseInt(chainId, 16) === 97 ? '(BSC Testnet ✅)' : '(Wrong network ⚠️)'}<br>
+          Balance: ${balanceInEth.toFixed(4)} BNB<br>
+          <br>
+          ${accounts[0] === '0x3710FEbef97cC9705b273C93f2BEB9aDf091Ffc9' ? 
+            '🎉 This is your Hack-Terminal wallet!' : 
+            '⚠️ This is NOT your Hack-Terminal wallet'}
+        `;
+      } catch (error) {
+        result.className = 'result error';
+        result.innerHTML = `
+          ❌ Error getting account info!<br>
+          Error: ${error.message}
+        `;
+      }
+    }
+
+    // Auto-check on load
+    window.addEventListener('load', () => {
+      checkMetaMask();
+    });
+  </script>
+</body>
+</html>
+
