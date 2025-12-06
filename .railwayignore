@@ -1,11 +1,21 @@
-# Ignore subdirectories that Railway shouldn't deploy as separate services
-# These are dependencies/libraries, not standalone services
+# Ignore EVERYTHING except the main app
+# Railway should ONLY deploy from root using the Dockerfile
 
-AWEtoAgent-Kit/
-q402-snapshot/
-docs/
-scripts/
-contracts/
+# Ignore all subdirectories completely
+AWEtoAgent-Kit/**
+q402-snapshot/**
+docs/**
+scripts/**
+contracts/**
+node_modules/**
+
+# Ignore all docker-compose files
+docker-compose*.yml
+docker-compose*.yaml
+
+# Ignore all Dockerfiles except root
+**/Dockerfile
+!Dockerfile
 
 # Ignore markdown files
 *.md
@@ -15,4 +25,9 @@ contracts/
 *.test.ts
 *.spec.js
 *.spec.ts
+
+# Ignore package.json in subdirectories
+**/package.json
+!package.json
+!frontend/package.json
 
