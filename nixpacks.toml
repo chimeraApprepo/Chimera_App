@@ -1,14 +1,17 @@
 # Nixpacks configuration for Railway deployment
+# This tells Railway how to build the MAIN app only
 
 [phases.setup]
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["npm ci", "cd frontend && npm ci"]
+# Use npm install (not ci) to be more flexible with lockfile
+cmds = ["npm install --legacy-peer-deps"]
 
 [phases.build]
-cmds = ["cd frontend && npm run build"]
+# Build the frontend
+cmds = ["cd frontend && npm install --legacy-peer-deps && npm run build"]
 
 [start]
-cmd = "npm start"
+cmd = "node src/index.js"
 

@@ -1,0 +1,18 @@
+# Ignore subdirectories that Railway shouldn't deploy as separate services
+# These are dependencies/libraries, not standalone services
+
+AWEtoAgent-Kit/
+q402-snapshot/
+docs/
+scripts/
+contracts/
+
+# Ignore markdown files
+*.md
+
+# Ignore test files
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
