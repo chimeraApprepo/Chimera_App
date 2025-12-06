@@ -131,8 +131,8 @@ export default function CreditsPage() {
       console.log('[Credits] Message:', messageWithOwner);
       
       // Use viem's signTypedData via wallet client - this opens MetaMask
+      // Don't pass 'account' - the wallet client uses the connected account automatically
       const signature = await walletClient.signTypedData({
-        account: address,
         domain: {
           name: witnessData.domain.name,
           version: witnessData.domain.version,
