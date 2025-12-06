@@ -1,0 +1,31 @@
+# Ignore everything we don't need in the Docker build
+node_modules
+frontend/node_modules
+.git
+.gitignore
+
+# Ignore the monorepo subdirectories (except q402 core which is a dependency)
+AWEtoAgent-Kit
+
+# Ignore docs and markdown
+*.md
+docs/
+
+# Ignore scripts and contracts (not needed at runtime)
+scripts/
+contracts/
+
+# Ignore build artifacts
+frontend/dist
+*.log
+
+# Ignore IDE files
+.vscode
+.idea
+*.swp
+
+# Ignore test files
+*.test.js
+*.spec.js
+coverage/
+
