@@ -1,7 +1,7 @@
 # Dockerfile for Railway deployment
 # This ensures ONLY the main app is deployed, ignoring subdirectories
 
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -34,9 +34,12 @@ RUN cd frontend && npm run build
 # Expose port (Railway sets PORT env var)
 EXPOSE 3000
 
+# Install curl for health check (slim image doesn't include it)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:3000/health || exit 1
 
 # Start the server
 CMD ["node", "src/index.js"]

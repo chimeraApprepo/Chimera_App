@@ -871,7 +871,7 @@ app.post('/api/contract/compile', async (c) => {
       return c.json({ error: 'Contract code is required' }, 400);
     }
 
-    console.log('[API] Compiling contract...');
+    console.log('[API] Compiling contract...', { codeLength: code?.length });
 
     const result = await compiler.compile(code, contractName);
 
@@ -880,10 +880,12 @@ app.post('/api/contract/compile', async (c) => {
       ...result
     });
   } catch (error) {
-    console.error('[API] Compilation error:', error);
+    console.error('[API] Compilation error:', error.message);
+    console.error('[API] Compilation error stack:', error.stack);
     return c.json({
       error: 'Compilation failed',
-      message: error.message
+      message: error.message,
+      details: error.stack?.split('\n').slice(0, 5).join('\n')
     }, 500);
   }
 });
