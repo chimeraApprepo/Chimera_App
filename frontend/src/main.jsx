@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')).render(
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <AuthGate>
-          <App />
+        <App />
         </AuthGate>
       </QueryClientProvider>
     </WagmiProvider>

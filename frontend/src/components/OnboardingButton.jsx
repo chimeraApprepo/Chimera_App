@@ -337,9 +337,9 @@ export default function OnboardingButton() {
                 background: 'rgba(34,197,94,0.1)',
                 border: '1px solid rgba(34,197,94,0.3)',
                 borderRadius: '10px',
-                padding: '12px',
-                textAlign: 'center'
-              }}>
+            padding: '12px',
+            textAlign: 'center'
+          }}>
                 <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>💵</div>
                 <div style={{ color: '#4ade80', fontWeight: '700', fontSize: '1.1rem' }}>1,000 USDC</div>
                 <div style={{ color: '#86efac', fontSize: '0.7rem' }}>For testing</div>
@@ -364,11 +364,11 @@ export default function OnboardingButton() {
                   🔗 Transaction Links
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {txLinks.bnb && (
-                    <a
-                      href={txLinks.bnb.explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                {txLinks.bnb && (
+                  <a
+                    href={txLinks.bnb.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                       style={{ 
                         display: 'flex',
                         alignItems: 'center',
@@ -400,13 +400,13 @@ export default function OnboardingButton() {
                       }}>
                         {txLinks.bnb.hash?.slice(0, 10)}...{txLinks.bnb.hash?.slice(-6)} ↗
                       </span>
-                    </a>
-                  )}
-                  {txLinks.usdc && (
-                    <a
-                      href={txLinks.usdc.explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  </a>
+                )}
+                {txLinks.usdc && (
+                  <a
+                    href={txLinks.usdc.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                       style={{ 
                         display: 'flex',
                         alignItems: 'center',
@@ -438,8 +438,8 @@ export default function OnboardingButton() {
                       }}>
                         {txLinks.usdc.hash?.slice(0, 10)}...{txLinks.usdc.hash?.slice(-6)} ↗
                       </span>
-                    </a>
-                  )}
+                  </a>
+                )}
                 </div>
               </div>
             )}

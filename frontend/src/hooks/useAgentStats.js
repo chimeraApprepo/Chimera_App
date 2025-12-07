@@ -1,6 +1,8 @@
 /**
  * useAgentStats Hook
- * Fetches on-chain stats for the agent from Base Sepolia via Basescan API
+ * Fetches on-chain stats for the agent from multiple chains:
+ * - ERC-8004 Identity: Base Sepolia (registration)
+ * - Operations: BSC Testnet (contract deployments, audits, swaps)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,15 +10,19 @@ import { useState, useEffect, useCallback } from 'react';
 // Agent configuration
 const AGENT_CONFIG = {
   agentId: '1581',
-  tokenAddress: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb', // ERC-8004 Identity Registry
-  network: 'base-sepolia'
+  // ERC-8004 Identity Registry on Base Sepolia
+  identityRegistry: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb',
+  // Facilitator wallet (same address, different chains)
+  facilitatorAddress: '0x3710FEbef97cC9705b273C93f2BEB9aDf091Ffc9',
 };
 
-// Base Sepolia Basescan API
-const BASESCAN_API = 'https://api-sepolia.basescan.org/api';
+// API endpoints for different chains
+const CHAIN_APIS = {
+  baseSepolia: 'https://api-sepolia.basescan.org/api',
+  bscTestnet: 'https://api-testnet.bscscan.com/api'
+};
 
 // Free tier - no API key needed for basic queries, but rate limited
-// For production, add: const API_KEY = import.meta.env.VITE_BASESCAN_API_KEY;
 
 /**
  * Format time ago string
@@ -59,7 +65,8 @@ function formatValue(valueWei) {
 
 export function useAgentStats() {
   const [stats, setStats] = useState({
-    totalAudits: null,
+    totalAudits: null,      // Total operations on BSC Testnet
+    contractsDeployed: null, // Contracts created by the agent
     valueSecured: null,
     lastActive: null,
     loading: true,
@@ -70,71 +77,71 @@ export function useAgentStats() {
     try {
       setStats(prev => ({ ...prev, loading: true, error: null }));
 
-      // Fetch token transfers for the agent (ERC-8004 token ID 1581)
-      // This gives us activity related to this agent identity
-      const tokenTxUrl = `${BASESCAN_API}?module=account&action=tokentx&address=${AGENT_CONFIG.tokenAddress}&startblock=0&endblock=99999999&sort=desc`;
+      // Fetch OPERATIONAL activity from BSC Testnet (where contracts are deployed)
+      // This is where the real work happens!
+      const bscTxUrl = `${CHAIN_APIS.bscTestnet}?module=account&action=txlist&address=${AGENT_CONFIG.facilitatorAddress}&startblock=0&endblock=99999999&sort=desc&page=1&offset=100`;
       
-      // Fetch normal transactions to the token contract
-      const normalTxUrl = `${BASESCAN_API}?module=account&action=txlist&address=${AGENT_CONFIG.tokenAddress}&startblock=0&endblock=99999999&sort=desc&page=1&offset=100`;
+      // Also fetch internal transactions (contract creations show here)
+      const bscInternalUrl = `${CHAIN_APIS.bscTestnet}?module=account&action=txlistinternal&address=${AGENT_CONFIG.facilitatorAddress}&startblock=0&endblock=99999999&sort=desc&page=1&offset=100`;
 
       // Fetch both in parallel
-      const [tokenTxResponse, normalTxResponse] = await Promise.all([
-        fetch(tokenTxUrl),
-        fetch(normalTxUrl)
+      const [bscTxResponse, bscInternalResponse] = await Promise.all([
+        fetch(bscTxUrl),
+        fetch(bscInternalUrl)
       ]);
 
-      const tokenTxData = await tokenTxResponse.json();
-      const normalTxData = await normalTxResponse.json();
+      const bscTxData = await bscTxResponse.json();
+      const bscInternalData = await bscInternalResponse.json();
 
-      // Process token transfers
-      let totalTransfers = 0;
+      // Process BSC Testnet transactions (operational activity)
+      let totalOperations = 0;
       let totalValue = BigInt(0);
       let lastTimestamp = 0;
+      let contractsDeployed = 0;
 
-      if (tokenTxData.status === '1' && Array.isArray(tokenTxData.result)) {
-        // Filter transfers related to our agent ID
-        const agentTransfers = tokenTxData.result.filter(tx => 
-          tx.tokenID === AGENT_CONFIG.agentId || 
-          tx.tokenName?.includes('8004') ||
-          tx.to?.toLowerCase() === AGENT_CONFIG.tokenAddress.toLowerCase()
-        );
+      if (bscTxData.status === '1' && Array.isArray(bscTxData.result)) {
+        const successfulTxs = bscTxData.result.filter(tx => tx.isError === '0');
+        totalOperations = successfulTxs.length;
         
-        totalTransfers = agentTransfers.length;
+        // Count contract creations
+        contractsDeployed = successfulTxs.filter(tx => 
+          tx.to === '' || tx.to === null || tx.contractAddress
+        ).length;
         
-        // Get the most recent timestamp
-        if (agentTransfers.length > 0) {
-          lastTimestamp = Math.max(lastTimestamp, parseInt(agentTransfers[0].timeStamp) || 0);
-        }
-      }
-
-      // Process normal transactions
-      if (normalTxData.status === '1' && Array.isArray(normalTxData.result)) {
-        // Count successful transactions as "audits/operations"
-        const successfulTxs = normalTxData.result.filter(tx => tx.isError === '0');
-        totalTransfers += successfulTxs.length;
-        
-        // Sum up value from transactions
+        // Sum up value and get latest timestamp
         successfulTxs.forEach(tx => {
           if (tx.value && tx.value !== '0') {
             totalValue += BigInt(tx.value);
           }
         });
 
-        // Get the most recent timestamp
-        if (normalTxData.result.length > 0) {
-          lastTimestamp = Math.max(lastTimestamp, parseInt(normalTxData.result[0].timeStamp) || 0);
+        if (bscTxData.result.length > 0) {
+          lastTimestamp = Math.max(lastTimestamp, parseInt(bscTxData.result[0].timeStamp) || 0);
         }
       }
 
-      // Use real on-chain data only - no simulated values
-      const audits = totalTransfers;
+      // Add internal transactions
+      if (bscInternalData.status === '1' && Array.isArray(bscInternalData.result)) {
+        bscInternalData.result.forEach(tx => {
+          if (tx.value && tx.value !== '0') {
+            totalValue += BigInt(tx.value);
+          }
+        });
+        
+        if (bscInternalData.result.length > 0) {
+          lastTimestamp = Math.max(lastTimestamp, parseInt(bscInternalData.result[0].timeStamp) || 0);
+        }
+      }
+
+      // Format the stats
       const valueStr = totalValue > 0 ? formatValue(totalValue.toString()) : '$0';
       const lastActiveStr = lastTimestamp > 0 
         ? formatTimeAgo(lastTimestamp) 
         : 'No activity yet';
 
       setStats({
-        totalAudits: audits,
+        totalAudits: totalOperations,
+        contractsDeployed,
         valueSecured: valueStr,
         lastActive: lastActiveStr,
         loading: false,
@@ -147,6 +154,7 @@ export function useAgentStats() {
       // On error, show error state - no fake/simulated data
       setStats({
         totalAudits: 0,
+        contractsDeployed: 0,
         valueSecured: '$0',
         lastActive: 'Unable to fetch',
         loading: false,

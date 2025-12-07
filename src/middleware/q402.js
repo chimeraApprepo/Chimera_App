@@ -285,11 +285,11 @@ async function verifyEIP712Signature(payload, expectedAmount, expectedToken) {
       const claimedOwner = paymentDetails?.witness?.message?.owner;
       if (witnessSignature && claimedOwner && ethers.isAddress(claimedOwner)) {
         console.log('[Q402] Accepting payment for demo - owner:', claimedOwner);
-        return {
-          valid: true,
+      return {
+        valid: true,
           payer: claimedOwner,
-          method: 'demo_accepted'
-        };
+        method: 'demo_accepted'
+      };
       }
       return { valid: false, reason: `Signature verification failed: ${sigError.message}` };
     }

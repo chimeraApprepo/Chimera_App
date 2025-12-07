@@ -6,11 +6,13 @@
 import { Waves } from './Waves';
 import AgentIdentityBadge from './AgentIdentityBadge';
 import { WalletStatus } from './WalletStatus';
-import { useAgentStats } from '../hooks/useAgentStats';
 
 export function LandingPage({ onNavigate }) {
-  // Fetch real on-chain stats from Base Sepolia
-  const { totalAudits, valueSecured, lastActive, loading: statsLoading } = useAgentStats();
+  // Agent wallet addresses
+  const AGENT_WALLET = '0x3710FEbef97cC9705b273C93f2BEB9aDf091Ffc9';
+  const IDENTITY_URL = 'https://sepolia.basescan.org/token/0x8004AA63c570c570eBF15376c0dB199918BFe9Fb?a=1581';
+  const BSC_TRANSACTIONS_URL = `https://testnet.bscscan.com/address/${AGENT_WALLET}`;
+  
   const features = [
     {
       icon: '💬',
@@ -154,38 +156,44 @@ export function LandingPage({ onNavigate }) {
               showNetwork={true}
             />
             
-            {/* Agent On-Chain Stats - Fetched from Base Sepolia */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              background: 'rgba(255, 255, 255, 0.04)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '12px',
-              fontSize: '0.75rem',
-              color: '#a3a3a3',
-              letterSpacing: '0.02em'
-            }}>
-              {statsLoading ? (
-                <span style={{ color: '#a3a3a3' }}>Loading on-chain stats...</span>
-              ) : (
-                <>
-                  <span style={{ color: '#4ade80', fontWeight: '600' }}>
-                    Total Audits: {totalAudits ?? '—'}
-                  </span>
-                  <span style={{ opacity: 0.4 }}>|</span>
-                  <span style={{ color: '#60a5fa', fontWeight: '600' }}>
-                    Value Secured: {valueSecured ?? '—'}
-                  </span>
-                  <span style={{ opacity: 0.4 }}>|</span>
-                  <span style={{ color: '#fbbf24' }}>
-                    Last Active: {lastActive ?? '—'}
-                  </span>
-                </>
-              )}
-            </div>
+            {/* View Agent Transactions on BSC Testnet */}
+            <a 
+              href={BSC_TRANSACTIONS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                background: 'rgba(251, 191, 36, 0.1)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(251, 191, 36, 0.25)',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                color: '#fbbf24',
+                letterSpacing: '0.02em',
+                textDecoration: 'none',
+                fontWeight: '600',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(251, 191, 36, 0.2)';
+                e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(251, 191, 36, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <span>🔗</span>
+              <span>View Agent Transactions on BSC Testnet</span>
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: 0.7 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
           </div>
         </div>
 

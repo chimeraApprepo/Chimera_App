@@ -6,6 +6,62 @@
 import { useState, useCallback } from 'react';
 import { createChatStream } from '../services/api';
 
+/**
+ * Intelligently join streaming chunks with proper spacing
+ * LLM streams often return word tokens without spaces between them
+ */
+function joinChunkWithSpacing(currentContent, newChunk) {
+  // If the content is empty, just return the new chunk
+  if (!currentContent) {
+    return newChunk;
+  }
+  
+  // If the new chunk is empty, return current content
+  if (!newChunk) {
+    return currentContent;
+  }
+  
+  const lastChar = currentContent.slice(-1);
+  const firstChar = newChunk.charAt(0);
+  
+  // Characters that should NOT have a space before them
+  const noSpaceBefore = /^[.,!?;:)\]}"'%\-\n\r]/;
+  
+  // Characters that should NOT have a space after them
+  const noSpaceAfter = /[(\[{"'\-\n\r]$/;
+  
+  // If the last char is already a space or newline, don't add another
+  if (/\s$/.test(lastChar)) {
+    return currentContent + newChunk;
+  }
+  
+  // If the first char of the new chunk is punctuation or special, don't add space
+  if (noSpaceBefore.test(firstChar)) {
+    return currentContent + newChunk;
+  }
+  
+  // If the last char is an opening bracket/quote, don't add space
+  if (noSpaceAfter.test(lastChar)) {
+    return currentContent + newChunk;
+  }
+  
+  // If the first character of new chunk is a space, don't add another
+  if (/^\s/.test(firstChar)) {
+    return currentContent + newChunk;
+  }
+  
+  // If both are alphanumeric or the chunk looks like a word, add a space
+  const isLastCharAlphanumeric = /[a-zA-Z0-9]$/.test(lastChar);
+  const isFirstCharAlphanumeric = /^[a-zA-Z0-9]/.test(firstChar);
+  
+  if (isLastCharAlphanumeric && isFirstCharAlphanumeric) {
+    return currentContent + ' ' + newChunk;
+  }
+  
+  // Default: concatenate directly
+  return currentContent + newChunk;
+}
+
 export function useStreamingChat() {
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -77,7 +133,8 @@ export function useStreamingChat() {
               }
             } catch {
               // Not JSON, treat as message content
-              assistantMessage.content += data;
+              // Use intelligent spacing to join chunks properly
+              assistantMessage.content = joinChunkWithSpacing(assistantMessage.content, data);
               setMessages(prev => {
                 const newMessages = [...prev];
                 newMessages[newMessages.length - 1] = { ...assistantMessage };

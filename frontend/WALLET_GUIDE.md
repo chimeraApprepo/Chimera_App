@@ -279,3 +279,4 @@ Shows: "Connected Wallet" with address & balance
 - **"WalletConnect"** = Mobile wallets (optional)
 - **Click "Injected"** → MetaMask popup → Connect → Done! ✅
 
+

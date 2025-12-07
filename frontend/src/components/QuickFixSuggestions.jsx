@@ -307,3 +307,4 @@ export function QuickFixSuggestions({ auditReport, contractCode, onApplyFix }) {
   );
 }
 
+

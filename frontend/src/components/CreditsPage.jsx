@@ -5,7 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount, useWalletClient, useChainId, useSwitchChain } from 'wagmi';
+import { bscTestnet } from 'wagmi/chains';
 import { 
   getCreditBalance, 
   getCreditPricing, 
@@ -13,7 +14,7 @@ import {
   completeCreditsPurchase
 } from '../services/api';
 import OnboardingButton from './OnboardingButton';
-import { logActivity, ACTIVITY_TYPES } from './WalletStatus';
+import { logActivity, ACTIVITY_TYPES, triggerChimBalanceRefresh } from './WalletStatus';
 
 // CHIM icon
 const ChimIcon = ({ size = 20 }) => (
@@ -38,7 +39,13 @@ const getServiceStyle = (service) => {
 
 export default function CreditsPage() {
   const { address, isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const { data: walletClient, isLoading: walletClientLoading } = useWalletClient();
+  
+  // Check if on correct network
+  const isCorrectNetwork = chainId === bscTestnet.id;
+  const walletReady = walletClient && isCorrectNetwork;
   const [balance, setBalance] = useState(null);
   const [pricing, setPricing] = useState(null);
   const [packages, setPackages] = useState([]);
@@ -96,8 +103,20 @@ export default function CreditsPage() {
       console.error('[Credits] Missing paymentInfo or selectedPackage');
       return;
     }
+    
+    // Check if on correct network first
+    if (!isCorrectNetwork) {
+      setMessage({ type: 'error', text: 'Please switch to BNB Testnet in MetaMask' });
+      try {
+        await switchChain({ chainId: bscTestnet.id });
+      } catch (e) {
+        console.error('Failed to switch chain:', e);
+      }
+      return;
+    }
+    
     if (!walletClient) {
-      setMessage({ type: 'error', text: 'Wallet not connected. Please reconnect.' });
+      setMessage({ type: 'error', text: 'Wallet not ready. Try disconnecting and reconnecting your wallet.' });
       return;
     }
     
@@ -190,6 +209,9 @@ export default function CreditsPage() {
         setPaymentInfo(null);
         setSelectedPackage(null);
         await fetchData();
+        
+        // Trigger refresh in the top nav WalletStatus component
+        triggerChimBalanceRefresh();
       }
     } catch (err) {
       console.error('[Credits] Payment error:', err);
@@ -560,25 +582,25 @@ export default function CreditsPage() {
               </button>
               <button
                 onClick={handleConfirmPayment}
-                disabled={signing || !walletClient}
+                disabled={signing || !walletReady}
                 style={{
                   flex: 1,
                   padding: '14px',
-                  background: (signing || !walletClient) ? '#475569' : 'linear-gradient(to right, #f59e0b, #ea580c)',
-                  color: (signing || !walletClient) ? '#94a3b8' : 'black',
+                  background: (signing || !walletReady) ? '#475569' : 'linear-gradient(to right, #f59e0b, #ea580c)',
+                  color: (signing || !walletReady) ? '#94a3b8' : 'black',
                   border: 'none',
                   borderRadius: '10px',
                   fontSize: '1rem',
                   fontWeight: 'bold',
-                  cursor: (signing || !walletClient) ? 'not-allowed' : 'pointer',
-                  opacity: (signing || !walletClient) ? 0.7 : 1,
+                  cursor: (signing || !walletReady) ? 'not-allowed' : 'pointer',
+                  opacity: (signing || !walletReady) ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px'
                 }}
               >
-                {signing ? 'Signing...' : !walletClient ? 'Connecting...' : '✍️ Sign & Pay'}
+                {signing ? 'Signing...' : !isCorrectNetwork ? '⚠️ Switch to BNB Testnet' : walletClientLoading ? 'Connecting...' : !walletClient ? 'Reconnect Wallet' : '✍️ Sign & Pay'}
               </button>
             </div>
             

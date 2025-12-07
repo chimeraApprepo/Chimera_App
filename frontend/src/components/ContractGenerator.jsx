@@ -14,7 +14,7 @@ import { GlassPanel, glassInputStyle } from './GlassPanel';
 import { useAgentBrain } from '../hooks/useAgentBrain';
 import { AuditLoopVisualizer } from './AuditLoopVisualizer';
 import { getCreditBalance, checkCredits } from '../services/api';
-import { logActivity, ACTIVITY_TYPES } from './WalletStatus';
+import { logActivity, ACTIVITY_TYPES, triggerChimBalanceRefresh } from './WalletStatus';
 
 // In production (served from same origin), use empty string for relative URLs
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
@@ -277,6 +277,9 @@ export function ContractGenerator() {
           summary: { criticalIssues: 0, highIssues: 0, mediumIssues: 0, lowIssues: 0, informational: 0 }
         });
         setStep(STEPS.PREVIEW);
+        
+        // Trigger refresh of CHIM balance in WalletStatus (CHIM was spent)
+        triggerChimBalanceRefresh();
       } else {
         throw new Error('No result received from generation');
       }
@@ -689,25 +692,68 @@ export function ContractGenerator() {
       {/* Step 3: Generating with Audit Loop Visualization */}
       {step === STEPS.GENERATING && (
         <div>
-          <GeneratingState />
+          {/* Main generation header */}
+          <GlassPanel 
+            variant="card"
+            hover={false}
+            style={{ 
+              padding: '1.5rem', 
+              textAlign: 'center',
+              marginBottom: '1rem',
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))',
+              border: '2px solid rgba(34,197,94,0.3)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+              <div style={{ fontSize: '2.5rem', animation: 'pulse 2s infinite' }}>🤖</div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ color: '#4ade80', fontSize: '1.3rem', margin: 0, fontWeight: '700' }}>
+                  AI Contract Generation in Progress
+                </h3>
+                <p style={{ color: '#86efac', margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>
+                  Watch the self-correcting audit loop below
+                </p>
+              </div>
+            </div>
+          </GlassPanel>
+          
+          {/* Prominent Audit Loop Visualizer */}
           <AuditLoopVisualizer 
             iterations={auditIterations}
             isComplete={auditLoopComplete}
+            isLoading={true}
           />
         </div>
       )}
+      
+      {/* Step 4: Preview & Sign - Now inline with audit logs visible */}
+      {step === STEPS.PREVIEW && (
+        <div>
+          {/* Transaction Preview - Collapsible inline panel */}
+          <TransactionPreview
+            isOpen={true}
+            code={generationResult?.contractCode}
+            auditResult={auditResult}
+            intent={{ type: 'deploy_contract', data: generationResult?.compiled }}
+            contractName={generationResult?.compiled?.contractName || 'Generated Contract'}
+            estimatedGas="0.002"
+            onSign={handleSignAndDeploy}
+            onCancel={() => setStep(STEPS.INPUT)}
+            defaultExpanded={true}
+          />
 
-      {/* Step 4: Preview & Sign */}
-      <TransactionPreview
-        isOpen={step === STEPS.PREVIEW}
-        code={generationResult?.contractCode}
-        auditResult={auditResult}
-        intent={{ type: 'deploy_contract', data: generationResult?.compiled }}
-        contractName={generationResult?.compiled?.contractName || 'Generated Contract'}
-        estimatedGas="0.002"
-        onSign={handleSignAndDeploy}
-        onCancel={() => setStep(STEPS.INPUT)}
-      />
+          {/* Audit Loop History - Always visible below the preview */}
+          {auditIterations.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <AuditLoopVisualizer 
+                iterations={auditIterations}
+                isComplete={true}
+                isLoading={false}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Step 5: Signing/Deploying */}
       {(step === STEPS.SIGNING || step === STEPS.DEPLOYING) && (

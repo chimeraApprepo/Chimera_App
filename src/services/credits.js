@@ -126,6 +126,10 @@ class CreditsService {
     // In-memory tracking for demo mode only
     this.demoBalances = new Map();
     
+    // Track spent credits for credit_tracking mode (when user hasn't approved facilitator)
+    // Maps userAddress.toLowerCase() -> BigInt of spent amount in wei
+    this.spentCredits = new Map();
+    
     this.init();
   }
   
@@ -197,10 +201,17 @@ class CreditsService {
     }
     
     try {
-      const balance = await this.contract.balanceOf(userAddress);
+      const onChainBalance = await this.contract.balanceOf(userAddress);
+      
+      // Subtract any tracked spending (for credit_tracking mode when user hasn't approved)
+      const spentAmount = this.spentCredits.get(userAddress.toLowerCase()) || BigInt(0);
+      const effectiveBalance = onChainBalance > spentAmount ? onChainBalance - spentAmount : BigInt(0);
+      
       return {
-        balance: balance.toString(),
-        formatted: ethers.formatEther(balance),
+        balance: effectiveBalance.toString(),
+        formatted: ethers.formatEther(effectiveBalance),
+        onChainBalance: ethers.formatEther(onChainBalance),
+        spentTracked: ethers.formatEther(spentAmount),
         symbol: 'CHIM',
         demoMode: false,
         contractAddress: this.contractAddress
@@ -557,41 +568,44 @@ class CreditsService {
   
   /**
    * Facilitator credit system - for users who haven't approved
-   * Instead of burning from user, we track credits and deduct from their balance
+   * Instead of burning from user, we track credits and deduct from their reported balance
    * This works because we minted tokens to them, so we know they have them
    */
   async _facilitatorCreditSpend(userAddress, service, pricing, serviceWei) {
     try {
+      const normalizedAddress = userAddress.toLowerCase();
+      
       // Check user's actual on-chain balance
       const userBalance = await this.contract.balanceOf(userAddress);
       
-      if (userBalance < serviceWei) {
+      // Get current tracked spending
+      const currentSpent = this.spentCredits.get(normalizedAddress) || BigInt(0);
+      const effectiveBalance = userBalance > currentSpent ? userBalance - currentSpent : BigInt(0);
+      
+      if (effectiveBalance < serviceWei) {
         return {
           success: false,
           error: 'Insufficient credits',
-          balance: ethers.formatEther(userBalance),
-          required: pricing.amount
+          balance: ethers.formatEther(effectiveBalance),
+          required: pricing.amount,
+          shortfall: ethers.formatEther(serviceWei - effectiveBalance)
         };
       }
       
-      // For the hackathon, we use a credit tracking system
-      // The user has CHIM in their wallet (we minted it)
-      // We track their "spent" amount
-      // In a production system, we'd either:
-      // 1. Require approval upfront
-      // 2. Use permit signatures
-      // 3. Have users stake tokens
+      // Track the spending - this deducts from their reported balance
+      const newSpent = currentSpent + serviceWei;
+      this.spentCredits.set(normalizedAddress, newSpent);
       
-      console.log('[Credits] Credit-based spend (no burn):', {
+      const newEffectiveBalance = userBalance - newSpent;
+      
+      console.log('[Credits] Credit-based spend (tracked):', {
         user: userAddress,
         service,
         amount: pricing.amount,
-        userBalance: ethers.formatEther(userBalance)
+        previousBalance: ethers.formatEther(effectiveBalance),
+        newBalance: ethers.formatEther(newEffectiveBalance),
+        totalSpent: ethers.formatEther(newSpent)
       });
-      
-      // For now, we'll track this as a "virtual" spend
-      // The tokens stay in user's wallet but we track usage
-      // In production, implement proper staking/burning
       
       return {
         success: true,
@@ -599,9 +613,9 @@ class CreditsService {
         user: userAddress,
         service,
         amount: pricing.amount,
-        newBalance: ethers.formatEther(userBalance - serviceWei),
+        newBalance: ethers.formatEther(newEffectiveBalance),
         method: 'credit_tracking',
-        note: 'User should approve facilitator for automatic burning'
+        note: 'Credits tracked - approve facilitator for on-chain burning'
       };
     } catch (error) {
       console.error('[Credits] Facilitator spend error:', error);

@@ -38,6 +38,17 @@ export default function CreditBalance({ compact = false, onPurchase, onNavigateT
   useEffect(() => {
     if (isConnected && address) {
       fetchData();
+      
+      // Listen for balance refresh events from other components
+      const handleBalanceRefresh = () => {
+        console.log('[CreditBalance] Received balance refresh event');
+        fetchData();
+      };
+      window.addEventListener('chim-balance-changed', handleBalanceRefresh);
+      
+      return () => {
+        window.removeEventListener('chim-balance-changed', handleBalanceRefresh);
+      };
     } else {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 /**
  * Audit Loop Visualizer
- * Shows each iteration of the self-correcting audit loop as stackable panels
- * Users can scroll through to see how the AI improved the contract
+ * Shows each iteration of the self-correcting audit loop as expandable stacked panels
+ * Users can expand each iteration to see details: why score is low, what improvements were made
  */
 
 import { useState } from 'react';
@@ -16,9 +16,10 @@ const getScoreColor = (score) => {
 };
 
 // Circular progress indicator
-const CircularProgress = ({ score, size = 80 }) => {
+const CircularProgress = ({ score, size = 60 }) => {
   const colors = getScoreColor(score);
-  const circumference = 2 * Math.PI * 35;
+  const radius = (size / 2) - 6;
+  const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
@@ -28,19 +29,19 @@ const CircularProgress = ({ score, size = 80 }) => {
         <circle
           cx={size / 2}
           cy={size / 2}
-          r="35"
+          r={radius}
           fill="none"
           stroke="rgba(255,255,255,0.1)"
-          strokeWidth="6"
+          strokeWidth="5"
         />
         {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
-          r="35"
+          r={radius}
           fill="none"
           stroke={colors.text}
-          strokeWidth="6"
+          strokeWidth="5"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
@@ -55,7 +56,7 @@ const CircularProgress = ({ score, size = 80 }) => {
         justifyContent: 'center',
         flexDirection: 'column'
       }}>
-        <span style={{ fontSize: '1.25rem', fontWeight: '700', color: colors.text }}>
+        <span style={{ fontSize: '1rem', fontWeight: '700', color: colors.text }}>
           {score}%
         </span>
       </div>
@@ -63,8 +64,8 @@ const CircularProgress = ({ score, size = 80 }) => {
   );
 };
 
-// Single iteration panel
-const IterationPanel = ({ iteration, isActive, isFinal, onClick, style = {} }) => {
+// Single expandable iteration panel
+const IterationPanel = ({ iteration, isFinal, isExpanded, onToggle, isLatest }) => {
   const [showCode, setShowCode] = useState(false);
   const colors = getScoreColor(iteration.score);
   
@@ -72,136 +73,181 @@ const IterationPanel = ({ iteration, isActive, isFinal, onClick, style = {} }) =
   const isPassing = iteration.score >= 80;
 
   return (
-    <div
-      onClick={onClick}
-      style={{
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        transform: isActive ? 'scale(1)' : 'scale(0.95)',
-        opacity: isActive ? 1 : 0.7,
-        ...style
-      }}
-    >
+    <div style={{ marginBottom: '0.75rem' }}>
       <GlassPanel
         variant="card"
-        hover={!isActive}
+        hover={!isExpanded}
         style={{
-          padding: '1.5rem',
-          border: isActive ? `2px solid ${colors.border}` : '1px solid rgba(255,255,255,0.1)',
-          background: isActive ? colors.bg : 'rgba(20, 20, 20, 0.6)',
+          padding: 0,
+          border: isLatest ? `2px solid ${colors.border}` : '1px solid rgba(255,255,255,0.1)',
+          background: isLatest ? colors.bg : 'rgba(20, 20, 20, 0.6)',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease'
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        {/* Clickable Header */}
+        <div
+          onClick={onToggle}
+          style={{
+            padding: '1rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent',
+            transition: 'background 0.2s ease'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {/* Iteration badge */}
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '36px',
+              height: '36px',
               borderRadius: '50%',
               background: isFinal ? 'linear-gradient(135deg, #4ade80, #22d3ee)' : 'rgba(255,255,255,0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '700',
-              fontSize: '1.1rem',
-              color: isFinal ? '#000' : '#fff'
+              fontSize: '1rem',
+              color: isFinal ? '#000' : '#fff',
+              flexShrink: 0
             }}>
               {isFinal ? '✓' : iteration.attempt}
             </div>
             
             <div>
-              <h3 style={{ margin: 0, color: '#f5f5f5', fontSize: '1.1rem', fontWeight: '600' }}>
-                {isFinal ? 'Final Version' : `Iteration ${iteration.attempt}`}
+              <h3 style={{ margin: 0, color: '#f5f5f5', fontSize: '1rem', fontWeight: '600' }}>
+                {isFinal ? '✅ Final Version - Passed!' : `Iteration ${iteration.attempt}`}
               </h3>
               <p style={{ margin: 0, color: '#a3a3a3', fontSize: '0.8rem' }}>
-                {isPassing ? '✅ Passed security threshold' : '🔄 Below threshold, regenerating...'}
+                {isPassing ? 'Passed security threshold' : 'Below threshold → regenerating...'}
               </p>
             </div>
           </div>
 
-          {/* Score circle */}
-          <CircularProgress score={iteration.score} size={70} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Score circle */}
+            <CircularProgress score={iteration.score} size={50} />
+            
+            {/* Expand/collapse indicator */}
+            <div style={{
+              color: '#a3a3a3',
+              fontSize: '1.2rem',
+              transition: 'transform 0.2s ease',
+              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+            }}>
+              ▼
+            </div>
+          </div>
         </div>
 
-        {/* Issues found */}
-        {issues.length > 0 && !isPassing && (
+        {/* Expandable Content */}
+        {isExpanded && (
           <div style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            borderRadius: '8px',
-            padding: '0.75rem',
-            marginBottom: '1rem'
+            padding: '1rem 1.25rem',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            animation: 'slideDown 0.2s ease-out'
           }}>
-            <div style={{ color: '#fca5a5', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-              🔍 Issues Found:
-            </div>
-            <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#fca5a5', fontSize: '0.8rem' }}>
-              {issues.slice(0, 3).map((issue, i) => (
-                <li key={i} style={{ marginBottom: '0.25rem' }}>{issue}</li>
-              ))}
-              {issues.length > 3 && (
-                <li style={{ opacity: 0.7 }}>+{issues.length - 3} more...</li>
-              )}
-            </ul>
-          </div>
-        )}
-
-        {/* Fixes applied (for subsequent iterations) */}
-        {iteration.attempt > 1 && iteration.fixesApplied && (
-          <div style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.2)',
-            borderRadius: '8px',
-            padding: '0.75rem',
-            marginBottom: '1rem'
-          }}>
-            <div style={{ color: '#86efac', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-              🔧 Fixes Applied:
-            </div>
-            <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#86efac', fontSize: '0.8rem' }}>
-              {iteration.fixesApplied.slice(0, 3).map((fix, i) => (
-                <li key={i} style={{ marginBottom: '0.25rem' }}>{fix}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Code preview toggle */}
-        {isActive && iteration.code && (
-          <div>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '6px',
-                padding: '0.5rem 1rem',
-                color: '#d4d4d4',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                width: '100%',
-                marginBottom: showCode ? '0.75rem' : 0
-              }}
-            >
-              {showCode ? '▼ Hide Code' : '▶ View Code'}
-            </button>
-            
-            {showCode && (
-              <pre style={{
-                background: 'rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(255,255,255,0.1)',
+            {/* Why score is low / Issues found */}
+            {issues.length > 0 && !isPassing && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
                 borderRadius: '8px',
-                padding: '1rem',
-                overflow: 'auto',
-                maxHeight: '200px',
-                fontSize: '0.75rem',
-                color: '#d4d4d4',
-                margin: 0
+                padding: '0.75rem',
+                marginBottom: '1rem'
               }}>
-                {iteration.code.substring(0, 1500)}
-                {iteration.code.length > 1500 && '\n\n... (truncated)'}
-              </pre>
+                <div style={{ color: '#fca5a5', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚠️ Why Score is Low:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#fca5a5', fontSize: '0.8rem' }}>
+                  {issues.map((issue, i) => (
+                    <li key={i} style={{ marginBottom: '0.25rem' }}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Passed message for final */}
+            {isPassing && (
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.1)',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ color: '#86efac', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ✅ Security Threshold Passed
+                </div>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#86efac', fontSize: '0.8rem', opacity: 0.9 }}>
+                  This contract meets the minimum security requirements ({iteration.score}% ≥ 80%)
+                </p>
+              </div>
+            )}
+
+            {/* Fixes applied (for subsequent iterations) */}
+            {iteration.attempt > 1 && iteration.fixesApplied && iteration.fixesApplied.length > 0 && (
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ color: '#a5b4fc', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🔧 Improvements Made:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#a5b4fc', fontSize: '0.8rem' }}>
+                  {iteration.fixesApplied.map((fix, i) => (
+                    <li key={i} style={{ marginBottom: '0.25rem' }}>{fix}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Code preview toggle */}
+            {iteration.code && (
+              <div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowCode(!showCode); }}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    padding: '0.5rem 1rem',
+                    color: '#d4d4d4',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    width: '100%',
+                    marginBottom: showCode ? '0.75rem' : 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {showCode ? '▼ Hide Code' : '▶ View Generated Code'}
+                </button>
+                
+                {showCode && (
+                  <pre style={{
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    overflow: 'auto',
+                    maxHeight: '200px',
+                    fontSize: '0.75rem',
+                    color: '#d4d4d4',
+                    margin: 0
+                  }}>
+                    {iteration.code.substring(0, 1500)}
+                    {iteration.code.length > 1500 && '\n\n... (truncated)'}
+                  </pre>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -211,118 +257,206 @@ const IterationPanel = ({ iteration, isActive, isFinal, onClick, style = {} }) =
 };
 
 // Main visualizer component
-export function AuditLoopVisualizer({ iterations = [], isComplete = false }) {
-  // Track which iteration user has manually selected (-1 means show latest)
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+export function AuditLoopVisualizer({ iterations = [], isComplete = false, isLoading = false }) {
+  // Track which iterations are expanded - default latest one to expanded
+  const [expandedIndices, setExpandedIndices] = useState(new Set([0]));
 
-  // Calculate active index: if user selected one, use that; otherwise show latest
-  const activeIndex = selectedIndex >= 0 && selectedIndex < iterations.length 
-    ? selectedIndex 
-    : Math.max(0, iterations.length - 1);
-
-  const setActiveIndex = (index) => {
-    setSelectedIndex(index);
+  const toggleExpanded = (index) => {
+    setExpandedIndices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
+
+  const expandAll = () => {
+    setExpandedIndices(new Set(iterations.map((_, i) => i)));
+  };
+
+  const collapseAll = () => {
+    setExpandedIndices(new Set());
+  };
+
+  // Show loading state when generating but no iterations yet
+  if (iterations.length === 0 && isLoading) {
+    return (
+      <div style={{ 
+        marginTop: '1.5rem',
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.1))',
+        border: '2px solid rgba(139,92,246,0.3)',
+        borderRadius: '16px',
+        padding: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            animation: 'spin 2s linear infinite'
+          }}>🔄</div>
+          <div style={{ textAlign: 'left' }}>
+            <h3 style={{ margin: 0, color: '#c4b5fd', fontSize: '1.2rem', fontWeight: '700' }}>
+              Self-Correcting Audit Loop
+            </h3>
+            <p style={{ margin: '4px 0 0 0', color: '#a5b4fc', fontSize: '0.9rem' }}>
+              Starting first iteration...
+            </p>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1.5rem',
+          padding: '1rem',
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '10px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>📝</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Generate</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🛡️</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Audit</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🔧</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Fix</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>✅</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Pass</div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   if (iterations.length === 0) {
     return null;
   }
 
   return (
-    <div style={{ marginTop: '1.5rem' }}>
+    <div style={{ 
+      marginTop: '1.5rem',
+      background: isComplete 
+        ? 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))'
+        : 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.1))',
+      border: isComplete 
+        ? '2px solid rgba(34,197,94,0.4)'
+        : '2px solid rgba(139,92,246,0.4)',
+      borderRadius: '16px',
+      padding: '1.5rem'
+    }}>
       {/* Progress header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '1rem',
-        padding: '0 0.5rem'
+        marginBottom: '1.5rem',
+        paddingBottom: '1rem',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        flexWrap: 'wrap',
+        gap: '1rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{
-            fontSize: '1.5rem',
+            fontSize: '2rem',
             animation: isComplete ? 'none' : 'pulse 1s infinite'
           }}>
             {isComplete ? '✅' : '🔄'}
           </div>
           <div>
-            <h3 style={{ margin: 0, color: '#f5f5f5', fontSize: '1rem', fontWeight: '600' }}>
-              {isComplete ? 'Audit Loop Complete!' : 'Self-Correcting Audit Loop'}
+            <h3 style={{ margin: 0, color: isComplete ? '#4ade80' : '#c4b5fd', fontSize: '1.15rem', fontWeight: '700' }}>
+              {isComplete ? '🎉 Audit Loop Complete!' : 'Self-Correcting Audit Loop'}
             </h3>
-            <p style={{ margin: 0, color: '#a3a3a3', fontSize: '0.8rem' }}>
+            <p style={{ margin: '4px 0 0 0', color: isComplete ? '#86efac' : '#a5b4fc', fontSize: '0.85rem' }}>
               {isComplete 
                 ? `Achieved ${iterations[iterations.length - 1]?.score}% security score in ${iterations.length} iteration${iterations.length > 1 ? 's' : ''}`
-                : 'AI is iteratively improving the contract...'}
+                : `Iteration ${iterations.length} in progress...`}
             </p>
           </div>
         </div>
 
-        {/* Iteration dots */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {iterations.map((iter, idx) => {
-            const colors = getScoreColor(iter.score);
-            return (
-              <button
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  border: activeIndex === idx ? `2px solid ${colors.text}` : '1px solid rgba(255,255,255,0.2)',
-                  background: activeIndex === idx ? colors.bg : 'rgba(255,255,255,0.05)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: colors.text,
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
-        </div>
+        {/* Expand/Collapse All buttons */}
+        {iterations.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={expandAll}
+              style={{
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.75rem',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '6px',
+                color: '#a3a3a3',
+                cursor: 'pointer'
+              }}
+            >
+              Expand All
+            </button>
+            <button
+              onClick={collapseAll}
+              style={{
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.75rem',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '6px',
+                color: '#a3a3a3',
+                cursor: 'pointer'
+              }}
+            >
+              Collapse All
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Stacked panels */}
-      <div 
-        style={{
-          position: 'relative',
-          minHeight: '300px'
-        }}
-      >
+      {/* Stacked iteration panels - all visible, individually expandable */}
+      <div>
         {iterations.map((iteration, idx) => (
           <IterationPanel
             key={idx}
             iteration={iteration}
-            isActive={idx === activeIndex}
             isFinal={isComplete && idx === iterations.length - 1}
-            onClick={() => setActiveIndex(idx)}
-            style={{
-              position: idx === activeIndex ? 'relative' : 'absolute',
-              top: idx === activeIndex ? 0 : `${idx * 10}px`,
-              left: idx === activeIndex ? 0 : `${idx * 5}px`,
-              right: idx === activeIndex ? 0 : `${idx * 5}px`,
-              zIndex: idx === activeIndex ? iterations.length : idx,
-              display: idx === activeIndex || Math.abs(idx - activeIndex) <= 1 ? 'block' : 'none'
-            }}
+            isExpanded={expandedIndices.has(idx)}
+            onToggle={() => toggleExpanded(idx)}
+            isLatest={idx === iterations.length - 1}
           />
         ))}
       </div>
 
-      {/* Navigation hint */}
-      {iterations.length > 1 && (
+      {/* Loading indicator for next iteration */}
+      {isLoading && !isComplete && (
         <div style={{
+          padding: '1rem',
           textAlign: 'center',
-          marginTop: '1rem',
-          color: '#737373',
-          fontSize: '0.8rem'
+          background: 'rgba(139,92,246,0.1)',
+          borderRadius: '8px',
+          border: '1px dashed rgba(139,92,246,0.3)'
         }}>
-          Click iteration numbers above to compare versions
+          <div style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            color: '#a5b4fc',
+            fontSize: '0.9rem'
+          }}>
+            <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
+            {iterations.length > 0 ? 'Generating improved version...' : 'Starting generation...'}
+          </div>
         </div>
       )}
 
@@ -332,10 +466,16 @@ export function AuditLoopVisualizer({ iterations = [], isComplete = false }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </div>
   );
 }
 
 export default AuditLoopVisualizer;
-
