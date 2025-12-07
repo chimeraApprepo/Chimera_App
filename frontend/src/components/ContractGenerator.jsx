@@ -254,7 +254,7 @@ export function ContractGenerator() {
       if (finalResult) {
         // Try to compile the contract
         try {
-          const compileResponse = await fetch(`${API_URL}/api/compile`, {
+          const compileResponse = await fetch(`${API_URL}/api/contract/compile`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: finalResult.contractCode })
@@ -310,11 +310,17 @@ export function ContractGenerator() {
 
   // Step 3: Sign and deploy with Brain visualization
   const handleSignAndDeploy = async () => {
+    console.log('[Deploy] Starting sign and deploy...');
+    console.log('[Deploy] Generation result:', generationResult);
+    
     if (!generationResult?.compiled) {
-      setError('No compiled contract to deploy');
+      console.error('[Deploy] No compiled contract found');
+      setError('No compiled contract to deploy. The contract may have failed to compile.');
+      setStep(STEPS.ERROR);
       return;
     }
 
+    console.log('[Deploy] Compiled contract found:', generationResult.compiled.contractName);
     setStep(STEPS.SIGNING);
 
     try {
