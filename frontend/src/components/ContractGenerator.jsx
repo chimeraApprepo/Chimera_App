@@ -689,11 +689,68 @@ export function ContractGenerator() {
       {/* Step 3: Generating with Audit Loop Visualization */}
       {step === STEPS.GENERATING && (
         <div>
-          <GeneratingState />
+          {/* Main generation header */}
+          <GlassPanel 
+            variant="card"
+            hover={false}
+            style={{ 
+              padding: '1.5rem', 
+              textAlign: 'center',
+              marginBottom: '1rem',
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))',
+              border: '2px solid rgba(34,197,94,0.3)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+              <div style={{ fontSize: '2.5rem', animation: 'pulse 2s infinite' }}>🤖</div>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ color: '#4ade80', fontSize: '1.3rem', margin: 0, fontWeight: '700' }}>
+                  AI Contract Generation in Progress
+                </h3>
+                <p style={{ color: '#86efac', margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>
+                  Watch the self-correcting audit loop below
+                </p>
+              </div>
+            </div>
+          </GlassPanel>
+          
+          {/* Prominent Audit Loop Visualizer */}
           <AuditLoopVisualizer 
             iterations={auditIterations}
             isComplete={auditLoopComplete}
+            isLoading={true}
           />
+        </div>
+      )}
+      
+      {/* Show audit history on preview step too */}
+      {step === STEPS.PREVIEW && auditIterations.length > 0 && (
+        <div style={{ marginBottom: '1rem' }}>
+          <details style={{ 
+            background: 'rgba(139,92,246,0.1)', 
+            border: '1px solid rgba(139,92,246,0.3)',
+            borderRadius: '12px',
+            padding: '1rem'
+          }}>
+            <summary style={{ 
+              cursor: 'pointer', 
+              color: '#c4b5fd', 
+              fontWeight: '600',
+              fontSize: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              📊 View Audit Loop History ({auditIterations.length} iteration{auditIterations.length > 1 ? 's' : ''})
+            </summary>
+            <div style={{ marginTop: '1rem' }}>
+              <AuditLoopVisualizer 
+                iterations={auditIterations}
+                isComplete={true}
+                isLoading={false}
+              />
+            </div>
+          </details>
         </div>
       )}
 

@@ -211,7 +211,7 @@ const IterationPanel = ({ iteration, isActive, isFinal, onClick, style = {} }) =
 };
 
 // Main visualizer component
-export function AuditLoopVisualizer({ iterations = [], isComplete = false }) {
+export function AuditLoopVisualizer({ iterations = [], isComplete = false, isLoading = false }) {
   // Track which iteration user has manually selected (-1 means show latest)
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
@@ -224,67 +224,144 @@ export function AuditLoopVisualizer({ iterations = [], isComplete = false }) {
     setSelectedIndex(index);
   };
 
+  // Show loading state when generating but no iterations yet
+  if (iterations.length === 0 && isLoading) {
+    return (
+      <div style={{ 
+        marginTop: '1.5rem',
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.1))',
+        border: '2px solid rgba(139,92,246,0.3)',
+        borderRadius: '16px',
+        padding: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            animation: 'spin 2s linear infinite'
+          }}>🔄</div>
+          <div style={{ textAlign: 'left' }}>
+            <h3 style={{ margin: 0, color: '#c4b5fd', fontSize: '1.2rem', fontWeight: '700' }}>
+              Self-Correcting Audit Loop
+            </h3>
+            <p style={{ margin: '4px 0 0 0', color: '#a5b4fc', fontSize: '0.9rem' }}>
+              Starting first iteration...
+            </p>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1.5rem',
+          padding: '1rem',
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '10px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>📝</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Generate</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🛡️</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Audit</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🔧</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Fix</div>
+          </div>
+          <div style={{ color: '#4b5563', fontSize: '1.5rem' }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>✅</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Pass</div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   if (iterations.length === 0) {
     return null;
   }
 
   return (
-    <div style={{ marginTop: '1.5rem' }}>
+    <div style={{ 
+      marginTop: '1.5rem',
+      background: isComplete 
+        ? 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))'
+        : 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.1))',
+      border: isComplete 
+        ? '2px solid rgba(34,197,94,0.4)'
+        : '2px solid rgba(139,92,246,0.4)',
+      borderRadius: '16px',
+      padding: '1.5rem'
+    }}>
       {/* Progress header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '1rem',
-        padding: '0 0.5rem'
+        marginBottom: '1.5rem',
+        paddingBottom: '1rem',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{
-            fontSize: '1.5rem',
+            fontSize: '2.5rem',
             animation: isComplete ? 'none' : 'pulse 1s infinite'
           }}>
             {isComplete ? '✅' : '🔄'}
           </div>
           <div>
-            <h3 style={{ margin: 0, color: '#f5f5f5', fontSize: '1rem', fontWeight: '600' }}>
-              {isComplete ? 'Audit Loop Complete!' : 'Self-Correcting Audit Loop'}
+            <h3 style={{ margin: 0, color: isComplete ? '#4ade80' : '#c4b5fd', fontSize: '1.25rem', fontWeight: '700' }}>
+              {isComplete ? '🎉 Audit Loop Complete!' : 'Self-Correcting Audit Loop'}
             </h3>
-            <p style={{ margin: 0, color: '#a3a3a3', fontSize: '0.8rem' }}>
+            <p style={{ margin: '4px 0 0 0', color: isComplete ? '#86efac' : '#a5b4fc', fontSize: '0.9rem' }}>
               {isComplete 
                 ? `Achieved ${iterations[iterations.length - 1]?.score}% security score in ${iterations.length} iteration${iterations.length > 1 ? 's' : ''}`
-                : 'AI is iteratively improving the contract...'}
+                : `Iteration ${iterations.length} in progress... AI is improving the contract`}
             </p>
           </div>
         </div>
 
-        {/* Iteration dots */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {iterations.map((iter, idx) => {
-            const colors = getScoreColor(iter.score);
-            return (
-              <button
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  border: activeIndex === idx ? `2px solid ${colors.text}` : '1px solid rgba(255,255,255,0.2)',
-                  background: activeIndex === idx ? colors.bg : 'rgba(255,255,255,0.05)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: colors.text,
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
+        {/* Iteration selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>Iterations:</span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {iterations.map((iter, idx) => {
+              const colors = getScoreColor(iter.score);
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setActiveIndex(idx)}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    border: activeIndex === idx ? `3px solid ${colors.text}` : '2px solid rgba(255,255,255,0.2)',
+                    background: activeIndex === idx ? colors.bg : 'rgba(255,255,255,0.05)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: colors.text,
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    transition: 'all 0.2s ease',
+                    boxShadow: activeIndex === idx ? `0 0 12px ${colors.text}40` : 'none'
+                  }}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
