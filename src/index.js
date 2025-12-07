@@ -1587,6 +1587,10 @@ app.post('/api/credits/buy', async (c) => {
       const usdcAmount = selectedPackage.usdcPrice;
       const usdcAmountWei = BigInt(parseFloat(usdcAmount) * 1e6).toString(); // USDC has 6 decimals
       
+      // Use CHIM contract as verifyingContract (must be a smart contract, not EOA)
+      // MetaMask blocks EIP-712 signatures where verifyingContract is an EOA
+      const verifyingContract = config.chim.contractAddress || config.payment.token;
+      
       const paymentInfo = {
         x402Version: 1,
         requiresPayment: true,
@@ -1598,10 +1602,10 @@ app.post('/api/credits/buy', async (c) => {
           to: config.payment.recipient,
           witness: {
             domain: {
-              name: 'q402',
+              name: 'ChimeraCredits',
               version: '1',
               chainId: config.blockchain.chainId,
-              verifyingContract: config.payment.recipient
+              verifyingContract: verifyingContract
             },
             types: {
               Witness: [
