@@ -33,10 +33,17 @@ export class AuditLoopService {
         // Generate contract
         yield { type: 'status', message: 'Generating contract...' };
         
-        let generatedCode = '';
+        let rawOutput = '';
         for await (const chunk of this.chaingpt.generateContractStream(currentPrompt)) {
-          generatedCode += chunk;
+          rawOutput += chunk;
           yield { type: 'code_chunk', data: chunk };
+        }
+
+        // Extract actual Solidity code from the response
+        const generatedCode = this.extractSolidityCode(rawOutput);
+        
+        if (!generatedCode) {
+          throw new Error('Could not extract Solidity code from response');
         }
 
         yield {
@@ -104,6 +111,65 @@ export class AuditLoopService {
         }
       }
     }
+  }
+
+  /**
+   * Extract actual Solidity code from AI response
+   * The AI often includes explanations, markdown, etc. This extracts just the code.
+   * @param {string} response - Full AI response
+   * @returns {string|null} Extracted Solidity code
+   */
+  extractSolidityCode(response) {
+    if (!response) return null;
+    
+    // Try to extract code from markdown code blocks
+    const markdownMatch = response.match(/```(?:solidity)?\s*\n([\s\S]*?)```/);
+    if (markdownMatch && markdownMatch[1]) {
+      const code = markdownMatch[1].trim();
+      if (code.includes('pragma solidity') || code.includes('contract ')) {
+        console.log('[AuditLoop] Extracted code from markdown block');
+        return code;
+      }
+    }
+    
+    // Try to find code starting with SPDX or pragma
+    const spdxMatch = response.match(/(\/\/\s*SPDX-License-Identifier[\s\S]*)/);
+    if (spdxMatch && spdxMatch[1]) {
+      // Find where the code likely ends (before explanatory text)
+      let code = spdxMatch[1];
+      // Remove trailing explanatory text after the last closing brace
+      const lastBrace = code.lastIndexOf('}');
+      if (lastBrace > 0) {
+        code = code.substring(0, lastBrace + 1);
+        console.log('[AuditLoop] Extracted code starting from SPDX');
+        return code.trim();
+      }
+    }
+    
+    // Try to find code starting with pragma
+    const pragmaMatch = response.match(/(pragma\s+solidity[\s\S]*)/);
+    if (pragmaMatch && pragmaMatch[1]) {
+      let code = pragmaMatch[1];
+      const lastBrace = code.lastIndexOf('}');
+      if (lastBrace > 0) {
+        code = code.substring(0, lastBrace + 1);
+        console.log('[AuditLoop] Extracted code starting from pragma');
+        return code.trim();
+      }
+    }
+    
+    // If response looks like it's already valid Solidity (no markdown, starts correctly)
+    if (response.trim().startsWith('//') || response.trim().startsWith('pragma')) {
+      const lastBrace = response.lastIndexOf('}');
+      if (lastBrace > 0) {
+        console.log('[AuditLoop] Response appears to be raw Solidity');
+        return response.substring(0, lastBrace + 1).trim();
+      }
+    }
+    
+    console.error('[AuditLoop] Could not extract Solidity code from response');
+    console.error('[AuditLoop] Response preview:', response.substring(0, 200));
+    return null;
   }
 
   /**
