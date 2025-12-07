@@ -328,7 +328,18 @@ export function WalletStatus({ onNavigate, style = {} }) {
       }
       fetchChimBalance();
       const interval = setInterval(fetchChimBalance, 30000);
-      return () => clearInterval(interval);
+      
+      // Listen for balance refresh events from other components
+      const handleBalanceRefresh = () => {
+        console.log('[WalletStatus] Received balance refresh event');
+        fetchChimBalance();
+      };
+      window.addEventListener('chim-balance-changed', handleBalanceRefresh);
+      
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('chim-balance-changed', handleBalanceRefresh);
+      };
     } else {
       setChimBalance(null);
     }
@@ -678,3 +689,12 @@ export default WalletStatus;
 
 // Export activity logging for use in other components
 export { logActivity, ACTIVITY_TYPES };
+
+/**
+ * Trigger a CHIM balance refresh in the WalletStatus component
+ * Call this after any operation that changes the user's CHIM balance
+ */
+export function triggerChimBalanceRefresh() {
+  console.log('[WalletStatus] Dispatching balance refresh event');
+  window.dispatchEvent(new CustomEvent('chim-balance-changed'));
+}

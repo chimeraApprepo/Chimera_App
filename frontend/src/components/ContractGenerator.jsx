@@ -14,7 +14,7 @@ import { GlassPanel, glassInputStyle } from './GlassPanel';
 import { useAgentBrain } from '../hooks/useAgentBrain';
 import { AuditLoopVisualizer } from './AuditLoopVisualizer';
 import { getCreditBalance, checkCredits } from '../services/api';
-import { logActivity, ACTIVITY_TYPES } from './WalletStatus';
+import { logActivity, ACTIVITY_TYPES, triggerChimBalanceRefresh } from './WalletStatus';
 
 // In production (served from same origin), use empty string for relative URLs
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3000');
@@ -277,6 +277,9 @@ export function ContractGenerator() {
           summary: { criticalIssues: 0, highIssues: 0, mediumIssues: 0, lowIssues: 0, informational: 0 }
         });
         setStep(STEPS.PREVIEW);
+        
+        // Trigger refresh of CHIM balance in WalletStatus (CHIM was spent)
+        triggerChimBalanceRefresh();
       } else {
         throw new Error('No result received from generation');
       }

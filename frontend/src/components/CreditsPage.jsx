@@ -14,7 +14,7 @@ import {
   completeCreditsPurchase
 } from '../services/api';
 import OnboardingButton from './OnboardingButton';
-import { logActivity, ACTIVITY_TYPES } from './WalletStatus';
+import { logActivity, ACTIVITY_TYPES, triggerChimBalanceRefresh } from './WalletStatus';
 
 // CHIM icon
 const ChimIcon = ({ size = 20 }) => (
@@ -209,6 +209,9 @@ export default function CreditsPage() {
         setPaymentInfo(null);
         setSelectedPackage(null);
         await fetchData();
+        
+        // Trigger refresh in the top nav WalletStatus component
+        triggerChimBalanceRefresh();
       }
     } catch (err) {
       console.error('[Credits] Payment error:', err);
