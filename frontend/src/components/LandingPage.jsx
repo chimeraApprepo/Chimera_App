@@ -130,7 +130,7 @@ export function LandingPage({ onNavigate }) {
             margin: '0 auto',
             fontWeight: '400'
           }}>
-            Deploy Smart Contracts with AI in Seconds
+            Powered by x.com/chimeradotonl (chimera.onl)
           </p>
           <p style={{
             fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)',
