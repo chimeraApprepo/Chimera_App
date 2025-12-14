@@ -241,7 +241,7 @@ export function AuthGate({ children }) {
               color: '#94a3b8',
               fontSize: '0.9rem'
             }}>
-              Autonomous AI Agent Platform
+              Autonomous AI by Chimera.onl (@chimeradotonl)
             </p>
           </div>
 
