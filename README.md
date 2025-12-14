@@ -1,6 +1,6 @@
 # 🦁 CHIMERA
 
-Contract Address : -
+Contract Address : 5cbWZ7zxiTptnKdbFVvyZhB39YQoxw6Wxu2GfwBpump
 https://chimera.onl
 https://x.com/chimeradotonl
 
