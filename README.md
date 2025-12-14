@@ -1,6 +1,6 @@
 # 🦁 CHIMERA
 
-### The Autonomous AI Agent for Smart Contract Development on BNB Chain
+### The Autonomous AI Agent for Smart Contract Development
 
 > **An AI-powered platform that generates, audits, and deploys smart contracts with gas-sponsored execution and verifiable on-chain identity.**
 
@@ -26,11 +26,11 @@ Once connected, you'll see a **"Judge / Demo Mode"** card:
 
 | Feature | What to Test | Expected Result |
 |---------|--------------|-----------------|
-| **💬 AI Chat** | Ask "What is BNB Chain?" | Streaming AI response with Web3 context |
+
 | **🏗️ Generate** | "Create a simple ERC-20 token" | Code generation → Audit loop → Deploy |
 | **🛡️ Audit** | Paste any Solidity code | Security score + vulnerability report |
 | **🔍 Analyze** | Enter any contract address | Source code + transaction analysis |
-| **🔄 Swap** | Swap tBNB for tokens | PancakeSwap integration |
+
 | **💸 Transfer** | Send tokens to any address | Gas-sponsored transfer |
 
 ---
@@ -69,7 +69,7 @@ Once connected, you'll see a **"Judge / Demo Mode"** card:
 |---------|--------|---------|
 | Real Sign-to-Pay | ✅ | EIP-712 typed data signatures |
 | Payment Verification | ✅ | Server-side signature validation |
-| Testnet Deployment | ✅ | BNB Smart Chain Testnet (Chain ID: 97) |
+
 
 #### ✅ Must-Have Features
 
@@ -99,7 +99,7 @@ Once connected, you'll see a **"Judge / Demo Mode"** card:
 │                     CHIMERA PLATFORM                        │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   React +   │  │    Hono     │  │   BNB Smart Chain   │  │
+│  │   React +   │  │    Hono     │  │    │  │
 │  │    Vite     │──│   Backend   │──│      Testnet        │  │
 │  │  Frontend   │  │   (Node)    │  │    (Chain ID: 97)   │  │
 │  └─────────────┘  └──────┬──────┘  └─────────────────────┘  │
@@ -235,7 +235,7 @@ POST /api/faucet/drip           # Get test funds
 
 - Node.js >= 20.9.0
 - MetaMask wallet
-- BSC Testnet tBNB (or use our faucet)
+
 
 ### Installation
 
@@ -260,8 +260,7 @@ cp .env.example .env
 ```bash
 # Required
 CHAINGPT_API_KEY=your_chaingpt_api_key
-BNB_RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545
-BNB_CHAIN_ID=97
+
 FACILITATOR_WALLET_ADDRESS=0x...
 FACILITATOR_PRIVATE_KEY=0x...
 
@@ -332,11 +331,10 @@ npm start
 ### 1. Authentication
 - Visit the platform URL
 - Enter the provided authorization code
-- Connect MetaMask to BNB Testnet
 
 ### 2. Get Test Funds
 - Click "🎁 Get Free Test Funds"
-- Receive 0.02 tBNB + 1,000 MockUSDC
+
 - Check wallet to confirm
 
 ### 3. Generate a Contract
@@ -380,7 +378,7 @@ npm start
 
 ## 📜 License
 
-MIT License - Built with ❤️ for the BNB Chain Hackathon
+
 
 ---
 
