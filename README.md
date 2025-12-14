@@ -4,8 +4,7 @@
 
 > **An AI-powered platform that generates, audits, and deploys smart contracts with gas-sponsored execution and verifiable on-chain identity.**
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Railway-blueviolet)](https://your-railway-url.railway.app)
-[![BNB Chain](https://img.shields.io/badge/Network-BNB_Chain_Testnet-F0B90B)](https://testnet.bscscan.com)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Railway-blueviolet)](https://)
 [![ChainGPT](https://img.shields.io/badge/AI-ChainGPT-00D395)](https://chaingpt.org)
 [![x402](https://img.shields.io/badge/Payments-x402_Protocol-6366f1)](https://github.com/quackai-labs/Q402)
 
@@ -15,15 +14,12 @@
 
 ### Step 1: Access the Platform
 
-1. **Visit the live demo**: [https://your-railway-url.railway.app](https://your-railway-url.railway.app)
+1. **Visit the live demo**: 
 2. **Enter the authorization code** when prompted (provided separately)
-3. **Connect your MetaMask wallet** to BNB Smart Chain Testnet
 
 ### Step 2: Get Test Funds (One Click!)
 
 Once connected, you'll see a **"Judge / Demo Mode"** card:
-- Click **"🎁 Get Free Test Funds"**
-- Receive **0.02 tBNB** (gas) + **1,000 MockUSDC** (testing) instantly
 - No faucet hunting required!
 
 ### Step 3: Explore Features
@@ -379,8 +375,6 @@ npm start
 - **ChainGPT Docs**: https://docs.chaingpt.org
 - **Q402 Protocol**: https://github.com/quackai-labs/Q402
 - **AWE Network**: https://docs.awenetwork.ai
-- **BNB Testnet Faucet**: https://www.bnbchain.org/en/testnet-faucet
-- **BSCScan Testnet**: https://testnet.bscscan.com
 
 ---
 
