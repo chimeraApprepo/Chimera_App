@@ -1,5 +1,9 @@
 # 🦁 CHIMERA
 
+Contract Address : 
+https://chimera.onl
+https://x.com/chimeradotonl
+
 ### The Autonomous AI Agent for Smart Contract Development
 
 > **An AI-powered platform that generates, audits, and deploys smart contracts with gas-sponsored execution and verifiable on-chain identity.**
